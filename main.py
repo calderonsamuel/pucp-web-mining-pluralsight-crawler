@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-import logging
+import time
 
 # Set up Chrome options
 chrome_options = Options()
@@ -44,9 +44,8 @@ first_course_list = hrefs[:1]
 href_children = {}
 
 # For each href, get all the children of the ".browse-search-results-list" element
-for href in first_course_list:
+for href in hrefs:
     driver.get(href)
-    # driver.implicitly_wait(10)
     
     # Find the .browse-search-results-list element
     results_list = driver.find_element(By.CSS_SELECTOR, ".browse-search-results-list")
@@ -55,24 +54,45 @@ for href in first_course_list:
     children = results_list.find_elements(By.XPATH, "./*")
     
     # Store the text of each child element in the dictionary
-    # href_children[href] = [child.text for child in children]
-    href_children[href] = []
+    href_children[href] = [child.text for child in children]
     
     while True:
         try:
             next_button = driver.find_element(By.CSS_SELECTOR, ".pagination-button.right")
-            # Get all the children of the results list on the new page
-            new_children = results_list.find_elements(By.XPATH, "./*")
-            href_children[href].extend([child.text for child in new_children])
-            
-            if "deactivated" in next_button.get_attribute("class"):
-                break
-            next_button.click()
-            # driver.implicitly_wait(10)
-        except Exception as e:
-            break
+            print("Found next button")
+            next_button_classes = next_button.get_attribute("class")
 
-n_href_children = len(href_children['https://www.pluralsight.com/browse?=&q=databases&type=all&sort=default'])
-print(f"Got {str(n_href_children)} href_children")
+            # Check if the next button is deactivated
+            if "deactivated" in next_button_classes:
+                print("Detected 'deactivated'")
+                break
+            
+            next_button.click()
+            print("Clicked next button")
+            # driver.implicitly_wait(30)
+            time.sleep(5)
+            print("Waited after clicking")
+            
+            # Re-locate the .browse-search-results-list element after clicking the next button
+            new_results_list = driver.find_element(By.CSS_SELECTOR, ".browse-search-results-list")
+            print("Got new results list")
+            new_children = new_results_list.find_elements(By.XPATH, "./*")
+            print("Got new children")
+            href_children[href].extend([child.text for child in new_children])
+            print("Extended href_children")
+        except Exception as e:
+            print(f"Exception occurred: {e}")
+            break
+    print("------------------------------")
+    print(f"Found {str(len(href_children[href]))} courses")
+    print("------------------------------")
+
+# n_href_children = len(href_children['https://www.pluralsight.com/browse?=&q=databases&type=all&sort=default'])
+# print(f"Got {str(n_href_children)} href_children")
+
+# Save href_children locally
+
+
+
 # Close the driver
 driver.quit()
