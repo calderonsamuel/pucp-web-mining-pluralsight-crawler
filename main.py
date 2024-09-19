@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import json
 
 # Set up Chrome options
 chrome_options = Options()
@@ -59,7 +60,7 @@ for href in hrefs:
     while True:
         try:
             next_button = driver.find_element(By.CSS_SELECTOR, ".pagination-button.right")
-            print("Found next button")
+            # print("Found next button")
             next_button_classes = next_button.get_attribute("class")
 
             # Check if the next button is deactivated
@@ -68,18 +69,18 @@ for href in hrefs:
                 break
             
             next_button.click()
-            print("Clicked next button")
+            # print("Clicked next button")
             # driver.implicitly_wait(30)
             time.sleep(5)
-            print("Waited after clicking")
+            # print("Waited after clicking")
             
             # Re-locate the .browse-search-results-list element after clicking the next button
             new_results_list = driver.find_element(By.CSS_SELECTOR, ".browse-search-results-list")
-            print("Got new results list")
+            # print("Got new results list")
             new_children = new_results_list.find_elements(By.XPATH, "./*")
-            print("Got new children")
+            # print("Got new children")
             href_children[href].extend([child.text for child in new_children])
-            print("Extended href_children")
+            # print("Extended href_children")
         except Exception as e:
             print(f"Exception occurred: {e}")
             break
@@ -91,8 +92,8 @@ for href in hrefs:
 # print(f"Got {str(n_href_children)} href_children")
 
 # Save href_children locally
-
-
+with open('href_children.json', 'w') as json_file:
+    json.dump(href_children, json_file)
 
 # Close the driver
 driver.quit()
